@@ -1,6 +1,3 @@
-//! By convention, main.zig is where your main function lives in the case that
-//! you are building an executable. If you are making a library, the convention
-//! is to delete this file and start with root.zig instead.
 const std = @import("std");
 const builtin = @import("builtin");
 const File = @import("file.zig");
@@ -13,11 +10,16 @@ pub fn main() !void {
     const gpa = general_purpose_allocator.allocator();
     var args = try std.process.argsWithAllocator(gpa);
     defer args.deinit();
-    const more_than_one_arg = args.skip();
-    if (!more_than_one_arg) {
-        return error.NoArgs;
+    _ = args.skip();
+    var path: []const u8 = undefined;
+    if (args.next()) |p| {
+        path = p;
+    } else {
+        switch (os) {
+            .linux => path = "/home",
+            else => return error.OofTryOnLinux,
+        }
     }
-    const path = args.next().?;
     if (args.next()) |_| {
         return error.TooManyArgs;
     }
